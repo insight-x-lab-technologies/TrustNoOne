@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">MimiMania</title>
+  <desc id="desc">Ícone do app Desafio da Mímica</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="64" x2="432" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffcf5a"/>
+      <stop offset="0.42" stop-color="#ec4899"/>
+      <stop offset="1" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="face" x1="152" y1="130" x2="360" y2="382" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff7d6"/>
+      <stop offset="1" stop-color="#ffd166"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="134" cy="126" r="18" fill="#ffffff" opacity="0.78"/>
+  <circle cx="392" cy="154" r="12" fill="#ffffff" opacity="0.7"/>
+  <circle cx="402" cy="380" r="20" fill="#ffffff" opacity="0.22"/>
+  <path d="M152 196c0-48 39-87 87-87h34c48 0 87 39 87 87v88c0 58-47 105-105 105s-103-47-103-105v-88z" fill="url(#face)" stroke="#1f123d" stroke-width="18"/>
+  <path d="M169 215c28-47 66-66 114-56 34 7 59 29 73 64v-36c0-50-42-90-94-90h-14c-52 0-94 40-94 90v31c5 1 10 0 15-3z" fill="#1f123d"/>
+  <circle cx="215" cy="255" r="15" fill="#1f123d"/>
+  <circle cx="299" cy="255" r="15" fill="#1f123d"/>
+  <path d="M209 314c28 27 68 27 96 0" fill="none" stroke="#1f123d" stroke-width="18" stroke-linecap="round"/>
+  <path d="M119 313c-26 14-42 35-47 63" fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round"/>
+  <path d="M393 313c26 14 42 35 47 63" fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round"/>
+  <path d="M150 418h212" stroke="#ffffff" stroke-width="30" stroke-linecap="round" opacity="0.95"/>
+  <path d="M198 421h116" stroke="#1f123d" stroke-width="14" stroke-linecap="round" opacity="0.85"/>
+</svg>

@@ -1,0 +1,16 @@
+{
+  "name": "charadeschallenge",
+  "version": "1.0.0",
+  "description": "Draw, Guess and Have Fun Together.",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "npx serve src",
+    "dev": "npx serve src --listen 3000"
+  },
+  "keywords": ["game", "charades", "family"],
+  "author": "Insight X Lab Game Studios",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

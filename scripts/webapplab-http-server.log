@@ -1,0 +1,208 @@
+
+[2026-04-30 00:28:22] Iniciando TrustNoOne na porta 8080
+Diretório servido: /mnt/userdata/Projetos/Pessoal/TrustNoOne/src
+100.95.181.108 - - [30/Apr/2026 00:28:55] "GET / HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:55] "GET /themes.css HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:55] "GET /style.css HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:55] "GET /script.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:55] "GET /games/mission/mission-main.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:55] "GET /manifest.webmanifest HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /assets/background/cosmic_desktop_bg_home.png HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /assets/songs/cosmic_gameroom.mp3 HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /games/mission/mission-engine.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /games/mission/mission-rooms.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /games/mission/mission-actions.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /games/mission/mission-logs.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /games/mission/mission-roles.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /games/mission/mission-state.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /games/mission/mission-content.js HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:28:56] code 404, message File not found
+100.95.181.108 - - [30/Apr/2026 00:28:56] "GET /favicon.ico HTTP/1.1" 404 -
+100.95.181.108 - - [30/Apr/2026 00:29:12] "GET /assets/background/cosmic_desktop_bg_app.png HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:29:12] code 404, message File not found
+100.95.181.108 - - [30/Apr/2026 00:29:12] "GET /favicon.ico HTTP/1.1" 404 -
+100.95.181.108 - - [30/Apr/2026 00:29:12] "GET /assets/songs/cosmic_gameroom.mp3 HTTP/1.1" 200 -
+100.95.181.108 - - [30/Apr/2026 00:29:22] "GET /assets/background/trustnoone_cosmic_desktop_bg_home.png HTTP/1.1" 200 -
+
+[2026-04-30 15:19:11] Iniciando TrustNoOne na porta 8080
+Diretório servido: /mnt/userdata/Projetos/Pessoal/TrustNoOne/src
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET / HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:57] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET /js/common.js HTTP/1.1" 404 -
+100.76.11.120 - - [30/Apr/2026 15:19:57] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 15:19:57] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET /css/styles.css HTTP/1.1" 404 -
+100.76.11.120 - - [30/Apr/2026 15:19:57] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET /js/home.js HTTP/1.1" 404 -
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET /js/i18n.config.js HTTP/1.1" 404 -
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET /themes.css HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET /style.css HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET /script.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:57] "GET /games/mission/mission-main.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:58] "GET /manifest.webmanifest HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:58] "GET /assets/background/trustnoone_cosmic_mobile_bg_home.png HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:58] "GET /games/mission/mission-validation.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:58] "GET /games/mission/mission-cpu.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:58] "GET /games/mission/mission-engine.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:58] "GET /games/mission/mission-multidevice.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:58] "GET /games/mission/mission-rooms.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:59] "GET /games/mission/mission-actions.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:59] "GET /games/mission/mission-logs.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:59] "GET /games/mission/mission-roles.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:59] "GET /games/mission/mission-state.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:59] "GET /games/mission/mission-content.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:19:59] "GET /assets/songs/cosmic_gameroom.mp3 HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:20:14] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 15:20:14] "GET /assets/icons/icon-192.png HTTP/1.1" 404 -
+100.76.11.120 - - [30/Apr/2026 15:20:14] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 15:20:14] "GET /favicon.ico HTTP/1.1" 404 -
+
+[2026-04-30 15:39:43] Iniciando TrustNoOne na porta 8080
+Diretório servido: /mnt/userdata/Projetos/Pessoal/TrustNoOne/src
+100.68.120.124 - - [30/Apr/2026 15:44:45] "GET / HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:44:45] "GET /themes.css HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:44:45] "GET /style.css HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:44:46] "GET /games/mission/mission-main.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:44:46] "GET /script.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:44:55] "GET /assets/background/trustnoone_cosmic_desktop_bg_home.png HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:10] "GET /games/mission/mission-cpu.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /games/mission/mission-validation.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /games/mission/mission-multidevice.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /games/mission/mission-engine.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /assets/songs/cosmic_gameroom.mp3 HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /games/mission/mission-rooms.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /games/mission/mission-state.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /games/mission/mission-logs.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /games/mission/mission-roles.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:14] "GET /games/mission/mission-actions.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:15] "GET /games/mission/mission-content.js HTTP/1.1" 200 -
+100.68.120.124 - - [30/Apr/2026 15:45:15] code 404, message File not found
+100.68.120.124 - - [30/Apr/2026 15:45:15] "GET /assets/icons/icon-192.png HTTP/1.1" 404 -
+100.68.120.124 - - [30/Apr/2026 15:45:15] code 404, message File not found
+100.68.120.124 - - [30/Apr/2026 15:45:15] "GET /favicon.ico HTTP/1.1" 404 -
+----------------------------------------
+Exception occurred during processing of request from ('100.68.120.124', 53202)
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/socketserver.py", line 683, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.10/http/server.py", line 1304, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/usr/lib/python3.10/http/server.py", line 668, in __init__
+    super().__init__(*args, **kwargs)
+  File "/usr/lib/python3.10/socketserver.py", line 747, in __init__
+    self.handle()
+  File "/usr/lib/python3.10/http/server.py", line 433, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.10/http/server.py", line 421, in handle_one_request
+    method()
+  File "/usr/lib/python3.10/http/server.py", line 675, in do_GET
+    self.copyfile(f, self.wfile)
+  File "/usr/lib/python3.10/http/server.py", line 875, in copyfile
+    shutil.copyfileobj(source, outputfile)
+  File "/usr/lib/python3.10/shutil.py", line 198, in copyfileobj
+    fdst_write(buf)
+  File "/usr/lib/python3.10/socketserver.py", line 826, in write
+    self._sock.sendall(b)
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------
+100.76.11.120 - - [30/Apr/2026 15:45:36] "GET / HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:45:37] "GET /style.css HTTP/1.1" 304 -
+100.76.11.120 - - [30/Apr/2026 15:45:37] "GET /games/mission/mission-main.js HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:45:37] "GET /games/mission/mission-cpu.js HTTP/1.1" 304 -
+100.76.11.120 - - [30/Apr/2026 15:45:37] "GET /games/mission/mission-validation.js HTTP/1.1" 304 -
+100.76.11.120 - - [30/Apr/2026 15:45:37] "GET /games/mission/mission-engine.js HTTP/1.1" 304 -
+100.76.11.120 - - [30/Apr/2026 15:45:37] "GET /games/mission/mission-multidevice.js HTTP/1.1" 304 -
+100.76.11.120 - - [30/Apr/2026 15:45:37] "GET /assets/songs/cosmic_gameroom.mp3 HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:45:37] "GET /games/mission/mission-content.js HTTP/1.1" 304 -
+100.76.11.120 - - [30/Apr/2026 15:45:41] "GET / HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:45:42] "GET /assets/songs/cosmic_gameroom.mp3 HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 15:45:49] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 15:45:49] "GET /assets/icons/icon-192.png HTTP/1.1" 404 -
+100.76.11.120 - - [30/Apr/2026 15:45:49] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 15:45:49] "GET /favicon.ico HTTP/1.1" 404 -
+
+[2026-04-30 19:13:14] Iniciando TrustNoOne na porta 8080
+Diretório servido: /mnt/userdata/Projetos/Pessoal/TrustNoOne/src
+100.76.11.120 - - [30/Apr/2026 19:13:59] "GET /assets/songs/cosmic_gameroom.mp3 HTTP/1.1" 200 -
+100.76.11.120 - - [30/Apr/2026 19:14:49] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 19:14:49] "GET /assets/icons/icon-192.png HTTP/1.1" 404 -
+100.76.11.120 - - [30/Apr/2026 19:14:49] code 404, message File not found
+100.76.11.120 - - [30/Apr/2026 19:14:49] "GET /favicon.ico HTTP/1.1" 404 -
+
+[2026-04-30 20:53:19] Iniciando TrustNoOne na porta 8080
+Diretório servido: /mnt/userdata/Projetos/Pessoal/TrustNoOne/src
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/usr/lib/python3.10/http/server.py", line 1307, in <module>
+    test(
+  File "/usr/lib/python3.10/http/server.py", line 1258, in test
+    with ServerClass(addr, HandlerClass) as httpd:
+  File "/usr/lib/python3.10/socketserver.py", line 452, in __init__
+    self.server_bind()
+  File "/usr/lib/python3.10/http/server.py", line 1301, in server_bind
+    return super().server_bind()
+  File "/usr/lib/python3.10/http/server.py", line 137, in server_bind
+    socketserver.TCPServer.server_bind(self)
+  File "/usr/lib/python3.10/socketserver.py", line 466, in server_bind
+    self.socket.bind(self.server_address)
+OSError: [Errno 98] Address already in use
+
+[2026-04-30 20:54:02] Iniciando TrustNoOne na porta 8080
+Diretório servido: /mnt/userdata/Projetos/Pessoal/TrustNoOne/src
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET / HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /themes.css HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /style.css HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /script.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /manifest.webmanifest HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-main.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /assets/background/trustnoone_cosmic_desktop_bg_home.png HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-cpu.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-multidevice.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-validation.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-engine.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-rooms.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-logs.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-actions.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-roles.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-state.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /games/mission/mission-content.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:21] code 404, message File not found
+192.168.68.121 - - [30/Apr/2026 20:54:21] "GET /favicon.ico HTTP/1.1" 404 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET / HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /themes.css HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /style.css HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /script.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-main.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /manifest.webmanifest HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /assets/background/trustnoone_cosmic_desktop_bg_home.png HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-cpu.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-validation.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-multidevice.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-rooms.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-engine.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-actions.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-logs.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-roles.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-state.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /games/mission/mission-content.js HTTP/1.1" 200 -
+192.168.68.121 - - [30/Apr/2026 20:54:23] code 404, message File not found
+192.168.68.121 - - [30/Apr/2026 20:54:23] "GET /favicon.ico HTTP/1.1" 404 -
+
+[2026-04-30 21:02:56] Iniciando TrustNoOne na porta 8080
+Diretório servido: /mnt/userdata/Projetos/Pessoal/TrustNoOne/src
+
+[2026-04-30 22:09:40] Iniciando TrustNoOne na porta 8080
+Diretório servido: /mnt/userdata/Projetos/Pessoal/TrustNoOne/src
+192.168.68.121 - - [30/Apr/2026 22:09:44] "GET / HTTP/1.1" 304 -
+192.168.68.121 - - [30/Apr/2026 22:09:44] "GET /style.css HTTP/1.1" 304 -
+192.168.68.121 - - [30/Apr/2026 22:09:44] "GET /games/mission/mission-main.js HTTP/1.1" 304 -
+192.168.68.121 - - [30/Apr/2026 22:09:44] "GET /games/mission/mission-cpu.js HTTP/1.1" 304 -
+192.168.68.121 - - [30/Apr/2026 22:09:44] "GET /games/mission/mission-validation.js HTTP/1.1" 304 -
+192.168.68.121 - - [30/Apr/2026 22:09:44] "GET /games/mission/mission-multidevice.js HTTP/1.1" 304 -
+192.168.68.121 - - [30/Apr/2026 22:09:44] "GET /games/mission/mission-engine.js HTTP/1.1" 304 -
+192.168.68.121 - - [30/Apr/2026 22:09:44] "GET /games/mission/mission-content.js HTTP/1.1" 304 -
+192.168.68.121 - - [30/Apr/2026 22:09:46] code 404, message File not found
+192.168.68.121 - - [30/Apr/2026 22:09:46] "GET /favicon.ico HTTP/1.1" 404 -
