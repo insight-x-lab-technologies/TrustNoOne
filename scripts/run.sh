@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
-APP_NAME="TrustNoOne"
+APP_NAME="$(basename "${PROJECT_DIR}")"
 PORT="${PORT:-${WEBAPPLAB_PORT:-8080}}"
 SERVE_DIR="${SERVE_DIR:-${PROJECT_DIR}/src}"
 PID_FILE="${SCRIPT_DIR}/.webapplab-http-server.pid"
@@ -31,8 +31,8 @@ start_server() {
 collect_urls() {
   local port="$1"
   local -a urls
+  local ipaddr
   local primary_ip
-  local host_ip
 
   urls=("http://127.0.0.1:${port}" "http://localhost:${port}")
 
@@ -41,14 +41,19 @@ collect_urls() {
     if [[ -n "${primary_ip}" ]] && [[ "${primary_ip}" != 127.* ]] && [[ "${primary_ip}" != *:* ]]; then
       urls+=("http://${primary_ip}:${port}")
     fi
-  fi
 
-  if [[ -z "${primary_ip}" ]] && command -v hostname >/dev/null 2>&1; then
-    while read -r host_ip; do
-      [[ -z "${host_ip}" ]] && continue
-      [[ "${host_ip}" == 127.* ]] && continue
-      [[ "${host_ip}" == *:* ]] && continue
-      urls+=("http://${host_ip}:${port}")
+    while read -r ipaddr; do
+      [[ -z "${ipaddr}" ]] && continue
+      [[ "${ipaddr}" == 127.* ]] && continue
+      [[ "${ipaddr}" == *:* ]] && continue
+      urls+=("http://${ipaddr}:${port}")
+    done < <(ip -4 -o addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1)
+  elif command -v hostname >/dev/null 2>&1; then
+    while read -r ipaddr; do
+      [[ -z "${ipaddr}" ]] && continue
+      [[ "${ipaddr}" == 127.* ]] && continue
+      [[ "${ipaddr}" == *:* ]] && continue
+      urls+=("http://${ipaddr}:${port}")
     done < <(hostname -I 2>/dev/null | tr ' ' '\n')
   fi
 

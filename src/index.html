@@ -27,6 +27,13 @@
   <div class="stars" id="stars"></div>
   <div class="notif" id="notif">✅</div>
 
+  <!-- M-22: Landscape orientation warning (CSS-driven, appears automatically) -->
+  <div class="tn-landscape-overlay" role="status" aria-live="polite">
+    <div class="tn-landscape-overlay-icon" aria-hidden="true">📱</div>
+    <p class="tn-landscape-overlay-title">Gire o celular</p>
+    <p class="tn-landscape-overlay-sub">Para melhor experiência, use o dispositivo na vertical.</p>
+  </div>
+
   <!-- RESULT OVERLAY -->
   <div class="result-overlay" id="resultOverlay">
     <div class="result-emoji" id="resultEmoji">🎉</div>
@@ -252,7 +259,7 @@
     <div class="page-shell mission-shell mission-play-shell">
       <header class="page-header">
         <button class="btn btn-ghost btn-sm" data-mission-nav="mission-setup">← Setup</button>
-        <h1 class="page-title">Trust No One</h1>
+        <h1 class="page-title">Trust No One <span id="mission-play-phase" class="tn-phase-badge"></span></h1>
       </header>
       <div id="trustnoone-play-root" class="mission-play-root"></div>
     </div>
@@ -1210,7 +1217,7 @@
   <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="script.js"></script>
-  <script type="module" src="games/mission/mission-main.js"></script>
+  <script type="module" src="tn-main.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
