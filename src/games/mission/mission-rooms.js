@@ -12,8 +12,8 @@ export const ROOM_STATUS = {
   critical: 'critical'
 };
 
-const DEFAULT_NORMAL_ACTIONS = ['perform_task', 'inspect_room', 'check_logs', 'assist_player', 'observe_player'];
-const DEFAULT_ANDROID_ACTIONS = ['fake_task', 'sabotage_room', 'lock_room', 'plant_false_evidence'];
+const DEFAULT_NORMAL_ACTIONS = ['perform_task', 'calibrate_system', 'inspect_room', 'check_logs', 'assist_player', 'observe_player'];
+const DEFAULT_ANDROID_ACTIONS = ['fake_task', 'sabotage_room', 'lock_room', 'plant_false_evidence', 'forge_statement'];
 
 export const MISSION_ROOMS = {
   bridge: {
@@ -24,7 +24,7 @@ export const MISSION_ROOMS = {
     description: 'Centro de navegação, alertas e decisões da nave.',
     riskLevel: RISK_LEVELS.high,
     normalTasks: DEFAULT_NORMAL_ACTIONS,
-    specialActions: ['emergency_repair', 'recover_deleted_log', 'trace_access', 'monitor_room'],
+    specialActions: ['emergency_repair', 'recover_deleted_log', 'trace_access', 'audit_access', 'monitor_room', 'security_patrol'],
     sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'corrupt_logs'],
     logTypes: ['access', 'system', 'movement']
   },
@@ -35,9 +35,9 @@ export const MISSION_ROOMS = {
     shortDescription: 'Motores e manutenção.',
     description: 'Área de manutenção dos motores, energia e suporte mecânico.',
     riskLevel: RISK_LEVELS.high,
-    normalTasks: DEFAULT_NORMAL_ACTIONS,
+    normalTasks: [...DEFAULT_NORMAL_ACTIONS, 'dual_repair'],
     specialActions: ['emergency_repair'],
-    sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'vent_accident'],
+    sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'vent_accident', 'divert_energy'],
     logTypes: ['repair', 'system', 'sabotage']
   },
   reactor: {
@@ -47,9 +47,9 @@ export const MISSION_ROOMS = {
     shortDescription: 'Energia central.',
     description: 'Núcleo energético da nave e ponto mais sensível da missão.',
     riskLevel: RISK_LEVELS.critical,
-    normalTasks: DEFAULT_NORMAL_ACTIONS,
+    normalTasks: [...DEFAULT_NORMAL_ACTIONS, 'dual_repair'],
     specialActions: ['emergency_repair', 'stabilize_reactor'],
-    sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'overload_reactor'],
+    sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'overload_reactor', 'divert_energy'],
     logTypes: ['system', 'repair', 'sabotage']
   },
   medbay: {
@@ -60,7 +60,7 @@ export const MISSION_ROOMS = {
     description: 'Sala de exames, amostras e monitoramento da tripulação.',
     riskLevel: RISK_LEVELS.medium,
     normalTasks: DEFAULT_NORMAL_ACTIONS,
-    specialActions: ['scan_player', 'treat_player'],
+    specialActions: ['scan_player', 'match_samples', 'treat_player'],
     sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'poison_supplies'],
     logTypes: ['medical', 'access', 'system']
   },
@@ -72,8 +72,8 @@ export const MISSION_ROOMS = {
     description: 'Canal de mensagens, pedidos de ajuda e sincronização externa.',
     riskLevel: RISK_LEVELS.high,
     normalTasks: DEFAULT_NORMAL_ACTIONS,
-    specialActions: ['recover_deleted_log', 'trace_access', 'monitor_room'],
-    sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'corrupt_logs'],
+    specialActions: ['recover_deleted_log', 'trace_access', 'audit_access', 'monitor_room', 'security_patrol', 'emergency_transmission'],
+    sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'corrupt_logs', 'divert_energy'],
     logTypes: ['communication', 'system', 'sabotage']
   },
   cafeteria: {
@@ -84,7 +84,7 @@ export const MISSION_ROOMS = {
     description: 'Área comum onde a tripulação se reúne e conversa.',
     riskLevel: RISK_LEVELS.low,
     normalTasks: DEFAULT_NORMAL_ACTIONS,
-    specialActions: ['monitor_room'],
+    specialActions: ['monitor_room', 'security_patrol'],
     sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'poison_supplies'],
     logTypes: ['movement', 'access', 'supply']
   },
@@ -96,7 +96,7 @@ export const MISSION_ROOMS = {
     description: 'Local de ferramentas, peças e suprimentos da nave.',
     riskLevel: RISK_LEVELS.medium,
     normalTasks: DEFAULT_NORMAL_ACTIONS,
-    specialActions: ['trace_access', 'monitor_room'],
+    specialActions: ['trace_access', 'audit_access', 'monitor_room', 'security_patrol'],
     sabotageActions: [...DEFAULT_ANDROID_ACTIONS, 'poison_supplies', 'vent_accident'],
     logTypes: ['access', 'movement', 'sabotage', 'supply']
   },

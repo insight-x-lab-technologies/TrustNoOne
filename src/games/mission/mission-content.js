@@ -111,6 +111,22 @@ export const STARSHIP_SETTING = {
       effects: { alertLevel: 'yellow', logPrecision: 'corrupted' }
     },
     {
+      id: 'blackout',
+      icon: '🌑',
+      name: 'Apagao',
+      trigger: 'evento especial de rodada',
+      publicText: 'A ocupacao ficou parcial e os depoimentos ganharam peso.',
+      effects: { partialOccupancy: true, reducedLogs: true, statementWeight: true }
+    },
+    {
+      id: 'intrusion_alarm',
+      icon: '🚨',
+      name: 'Alarme de Intrusao',
+      trigger: 'evento especial de rodada',
+      publicText: 'Dois setores entram no radar e devem ser priorizados na investigacao.',
+      effects: { suspiciousRooms: 2, investigationPriority: true }
+    },
+    {
       id: 'life_support_warning',
       icon: '🩺',
       name: 'Alerta de Suporte de Vida',

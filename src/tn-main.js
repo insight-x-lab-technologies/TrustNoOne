@@ -4,6 +4,7 @@ import {
   applyCpuVotes,
   createCpuPlayers
 } from './games/mission/mission-cpu.js';
+import { CPU_PROFILES, getCpuProfile } from './games/mission/mission-cpu-profiles.js';
 import { runMissionValidationSuite } from './games/mission/mission-validation.js';
 import {
   createMissionHostSession,
@@ -13,10 +14,13 @@ import {
   renderMissionQrCode
 } from './games/mission/mission-multidevice.js';
 import {
+  accuseCpu,
+  askCpuQuestion,
   assignRoles,
   chooseAction,
   chooseRoom,
   createMissionGame,
+  deferVoting,
   generateLogs,
   getPrivateState,
   getPublicState,
@@ -43,6 +47,20 @@ const DEFAULT_MISSION_SETTINGS = {
   votingSeconds: 45,
   cpuDifficulty: 'normal'
 };
+const MISSION_PRESETS = {
+  investigativeSolo: {
+    id: 'investigativeSolo',
+    label: 'Solo Investigativo',
+    playerCount: 4,
+    cpuCount: 3,
+    rounds: 5,
+    discussionSeconds: 30,
+    votingSeconds: 45,
+    cpuDifficulty: 'normal',
+    forceVoting: true,
+    singleDevice: true
+  }
+};
 const GAME_SESSION_KEY = 'trustnoone_session_v1';
 const LAST_RESULT_KEY = 'trustnoone_last_result_v1';
 
@@ -62,6 +80,7 @@ let joinedPlayers = [];
 let devicePublicState = null;
 let devicePrivateState = null;
 let pendingDeviceActionId = '';
+let activeMissionPresetId = '';
 
 function $(id) {
   return document.getElementById(id);
@@ -107,14 +126,24 @@ function setInputValue(id, value) {
   if (input) input.value = String(value);
 }
 
+function setMissionSetupValues(config = {}) {
+  setInputValue('trustnoone-player-count', config.playerCount ?? DEFAULT_MISSION_SETTINGS.playerCount);
+  setInputValue('trustnoone-cpu-count', config.cpuCount ?? DEFAULT_MISSION_SETTINGS.cpuCount);
+  setInputValue('trustnoone-rounds', config.rounds ?? DEFAULT_MISSION_SETTINGS.rounds);
+  setInputValue('trustnoone-cpu-difficulty', config.cpuDifficulty || DEFAULT_MISSION_SETTINGS.cpuDifficulty);
+  if (typeof config.singleDevice === 'boolean') {
+    const singleDevice = $('trustnoone-single-device');
+    if (singleDevice) singleDevice.checked = config.singleDevice;
+  }
+}
+
 function applySettingsToSetup() {
   const settings = getMissionSettings();
-  setInputValue('trustnoone-player-count', settings.playerCount);
-  setInputValue('trustnoone-cpu-count', settings.cpuCount);
-  setInputValue('trustnoone-rounds', settings.rounds);
-  setInputValue('trustnoone-cpu-difficulty', settings.cpuDifficulty);
+  activeMissionPresetId = settings.presetId && settings.presetId !== 'custom' ? settings.presetId : '';
+  setMissionSetupValues(settings);
   updateRangeLabels();
   renderSetupPlayers();
+  updateSetupSummary();
 }
 
 function activePlayers() {
@@ -125,6 +154,12 @@ function activeHumanPlayers() {
   return activePlayers().filter(player => !player.flags?.isCpu);
 }
 
+function isSoloAssistMode(state = gameState) {
+  const players = state?.players || [];
+  const active = players.filter(player => !player.flags?.expelled);
+  return active.filter(player => !player.flags?.isCpu).length === 1 && active.some(player => player.flags?.isCpu);
+}
+
 function currentPlayer(index) {
   return activeHumanPlayers()[index] || null;
 }
@@ -132,14 +167,32 @@ function currentPlayer(index) {
 function renderSetupPlayers() {
   const totalCount = Number.parseInt($('trustnoone-player-count')?.value, 10) || 4;
   const count = Math.max(1, totalCount - getCpuCount());
+  const cpuCount = getCpuCount();
   const list = $('trustnoone-player-list');
   if (!list) return;
-  list.innerHTML = Array.from({ length: count }, (_, index) => `
+  const humanRows = Array.from({ length: count }, (_, index) => `
     <label class="mission-player-row">
       <span class="mission-player-index">${index + 1}</span>
       <input class="inp" data-mission-player-name="${index}" value="${escapeHtml(DEFAULT_PLAYER_NAMES[index] || `Jogador ${index + 1}`)}" autocomplete="off" enterkeyhint="${index + 1 < count ? 'next' : 'done'}" inputmode="text">
     </label>
   `).join('');
+  const cpuRows = cpuCount ? `
+    <div class="tn-cpu-profile-preview" aria-label="Perfis dos CPUs da partida">
+      <span class="tn-hud-label">CPUs previstos</span>
+      <div class="tn-cpu-profile-list">
+        ${createCpuPlayers(cpuCount, count, getCpuDifficulty()).map(cpu => {
+    const profile = getCpuProfile(cpu.flags?.personality);
+    return `
+          <div class="tn-cpu-profile-card">
+            <strong>${escapeHtml(cpu.name)} · ${escapeHtml(profile.name)}</strong>
+            <small>${escapeHtml(profile.shortDescription)}</small>
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  ` : '';
+  list.innerHTML = `${humanRows}${cpuRows}`;
 }
 
 function updateRangeLabels() {
@@ -157,6 +210,7 @@ function updateRangeLabels() {
   if (cpuCount && cpuCountValue) cpuCountValue.textContent = cpuCount.value;
   if (rounds && roundsValue) roundsValue.textContent = rounds.value;
   updateMissionSettingsLabels();
+  updateSetupSummary();
 }
 
 function updateMissionSettingsLabels() {
@@ -189,6 +243,35 @@ function getCpuDifficulty() {
   return $('trustnoone-cpu-difficulty')?.value || 'normal';
 }
 
+function getActiveMissionPreset() {
+  return MISSION_PRESETS[activeMissionPresetId] || null;
+}
+
+function updateSetupSummary() {
+  const summary = $('trustnoone-setup-summary');
+  if (!summary) return;
+  const preset = getActiveMissionPreset();
+  summary.textContent = preset
+    ? `${preset.label}: 1 humano + 3 CPUs, ${preset.rounds} rodadas, discussão curta e votação sempre disponível.`
+    : 'Configure os jogadores e passe o celular apenas quando a tela pedir.';
+}
+
+function clearActiveMissionPreset() {
+  activeMissionPresetId = '';
+  updateSetupSummary();
+}
+
+function applyMissionPreset(presetId) {
+  const preset = MISSION_PRESETS[presetId];
+  if (!preset) return;
+  activeMissionPresetId = preset.id;
+  clearSetupError();
+  setMissionSetupValues(preset);
+  updateRangeLabels();
+  updateSetupMode();
+  renderSetupPlayers();
+}
+
 function updateSetupMode() {
   const singleDevice = $('trustnoone-single-device')?.checked !== false;
   $('trustnoone-player-list')?.parentElement?.classList.toggle('hidden', !singleDevice);
@@ -212,13 +295,18 @@ function readPlayers() {
 }
 
 function getCurrentMissionConfig(players) {
+  const preset = getActiveMissionPreset();
+  const fallbackSettings = getMissionSettings();
   return {
     playerCount: players.length,
     cpuCount: getCpuCount(),
     rounds: Number.parseInt($('trustnoone-rounds')?.value, 10) || 6,
-    discussionSeconds: Number.parseInt($('mission-setting-discussion')?.value, 10) || getMissionSettings().discussionSeconds,
-    votingSeconds: Number.parseInt($('mission-setting-voting')?.value, 10) || getMissionSettings().votingSeconds,
-    cpuDifficulty: getCpuDifficulty()
+    discussionSeconds: preset?.discussionSeconds || fallbackSettings.discussionSeconds,
+    votingSeconds: preset?.votingSeconds || fallbackSettings.votingSeconds,
+    cpuDifficulty: getCpuDifficulty(),
+    presetId: preset?.id || 'custom',
+    forceVoting: Boolean(preset?.forceVoting),
+    taskProgressScale: preset?.taskProgressScale || fallbackSettings.taskProgressScale || null
   };
 }
 
@@ -247,7 +335,8 @@ function renderPlayerChips() {
   const chips = (state.players || []).map(p => {
     const initial = escapeHtml((p.name || '?').charAt(0).toUpperCase());
     const name = escapeHtml(p.name || '?');
-    return `<span class="tn-player-chip ${p.expelled ? 'tn-chip-expelled' : 'tn-chip-active'}" title="${name}"><span class="tn-chip-avatar">${initial}</span><span class="tn-chip-name">${name}</span>${p.expelled ? '<span aria-hidden="true"> ✗</span>' : ''}</span>`;
+    const profile = p.cpuProfile ? ` · ${escapeHtml(p.cpuProfile.name)}` : '';
+    return `<span class="tn-player-chip ${p.expelled ? 'tn-chip-expelled' : 'tn-chip-active'} ${p.isCpu ? 'tn-chip-cpu' : ''}" title="${name}${profile}"><span class="tn-chip-avatar">${initial}</span><span class="tn-chip-name">${name}</span>${p.isCpu ? '<span class="tn-chip-tag">CPU</span>' : ''}${p.expelled ? '<span aria-hidden="true"> ✗</span>' : ''}</span>`;
   }).join('');
   return `<div class="tn-players-bar" aria-label="Jogadores na partida">${chips}</div>`;
 }
@@ -434,8 +523,486 @@ function publicStatus() {
   `;
 }
 
+function renderMissionObjectives(state = getPublicState(gameState)) {
+  const objectives = state.missionObjectives?.criticalSystems || [];
+  if (!objectives.length) return '';
+  const completedCount = objectives.filter(item => (item.completed || 0) >= (item.required || 1)).length;
+  return `
+    <div class="tn-objectives mb" aria-label="Objetivos críticos da missão">
+      <div class="tn-objectives-head">
+        <span class="tn-hud-label">Sistemas críticos</span>
+        <strong>${completedCount}/${objectives.length}</strong>
+      </div>
+      <div class="tn-objective-list">
+        ${objectives.map(item => {
+    const room = state.rooms?.[item.roomId] || MISSION_ROOMS[item.roomId];
+    const done = (item.completed || 0) >= (item.required || 1);
+    return `
+          <div class="tn-objective ${done ? 'tn-objective-done' : ''}">
+            <span>${done ? '✓' : '○'}</span>
+            <strong>${escapeHtml(room?.name || item.roomId)}</strong>
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSuspicionMeter(state = getPublicState(gameState)) {
+  const suspicion = state.suspicion?.byPlayerId || {};
+  const entries = (state.players || [])
+    .filter(player => !player.expelled)
+    .map(player => ({
+      player,
+      score: suspicion[player.id]?.score || 0,
+      level: suspicion[player.id]?.level || 'low',
+      reason: suspicion[player.id]?.reasons?.[0]?.message || 'Sem sinal público forte.'
+    }))
+    .sort((a, b) => b.score - a.score || a.player.name.localeCompare(b.player.name));
+  if (!entries.length) return '';
+  return `
+    <div class="tn-suspicion mb" aria-label="Medidor público de suspeita">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Suspeita pública</span>
+        <strong>${entries[0].score > 0 ? escapeHtml(entries[0].player.name) : 'Sem líder'}</strong>
+      </div>
+      <div class="tn-suspicion-list">
+        ${entries.map(({ player, score, level, reason }) => `
+          <div class="tn-suspect tn-suspect-${escapeHtml(level)}">
+            <span class="tn-suspect-name">${escapeHtml(player.name)}</span>
+            <div class="tn-suspect-bar" aria-hidden="true"><span style="width:${Math.max(4, score)}%"></span></div>
+            <strong>${score}</strong>
+            <small>${escapeHtml(reason)}</small>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function roundBriefIcon(type = '') {
+  return {
+    risk: '!',
+    log: '?',
+    noise: '~',
+    objective: '✓',
+    suspect: '•',
+    alibi: '✓',
+    contradiction: '!',
+    verified: '✓',
+    quiet: '…'
+  }[type] || '•';
+}
+
+function renderRoundBriefing(state = getPublicState(gameState)) {
+  const items = (state.roundBriefing || []).filter(item => item.round === state.round).slice(0, 4);
+  if (!items.length) return '';
+  return `
+    <div class="tn-briefing mb" aria-label="O que importa nesta rodada">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">O que importa nesta rodada</span>
+        <strong>${items.length} fato${items.length === 1 ? '' : 's'}</strong>
+      </div>
+      <div class="tn-briefing-list">
+        ${items.map(item => `
+          <div class="tn-brief-item tn-brief-${escapeHtml(item.type)}">
+            <span class="tn-brief-icon">${roundBriefIcon(item.type)}</span>
+            <span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.detail)}</small></span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function logClass(log = {}) {
   return `mission-log-item mission-log-${escapeHtml(log.type || 'access')} mission-log-${escapeHtml(log.precision || 'vague')}`;
+}
+
+function evidenceTypeLabel(type = '') {
+  return {
+    sabotage_candidates: 'Candidatos',
+    tampered_record: 'Log adulterado',
+    medical_anomaly: 'Anomalia',
+    room_alibi: 'Álibi',
+    contested_alibi: 'Álibi contestado',
+    strong_alibi: 'Álibi forte',
+    failed_dual_repair: 'Reparo incompleto',
+    investigation_trace: 'Rastreamento',
+    access_audit: 'Auditoria',
+    room_monitor: 'Monitoramento',
+    security_patrol: 'Ronda',
+    security_patrol_scheduled: 'Ronda agendada',
+    player_scan: 'Escaneamento',
+    sample_match: 'Amostras',
+    emergency_transmission: 'Emergência',
+    energy_risk: 'Risco instável',
+    forged_statement: 'Depoimento forjado',
+    blackout: 'Apagão',
+    intrusion_alarm: 'Alarme',
+    calibration_noise: 'Ruído técnico',
+    statement_conflict: 'Contradição',
+    false_evidence_revealed: 'Pista falsa',
+    signal: 'Pista'
+  }[type] || 'Pista';
+}
+
+function getSoloHumanPlayer(state = getPublicState(gameState)) {
+  return (state.players || []).find(player => !player.isCpu && !player.expelled) || null;
+}
+
+function renderRoundEventPanel(state = getPublicState(gameState)) {
+  const event = state.currentRoundEvent;
+  if (!event) return '';
+  const rooms = (event.roomIds || [])
+    .map(roomId => state.rooms?.[roomId]?.name || MISSION_ROOMS[roomId]?.name || roomId)
+    .join(' · ');
+  return `
+    <div class="tn-round-event tn-round-event-${escapeHtml(event.type)} mb">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Evento da rodada</span>
+        <strong>${escapeHtml(event.title || 'Evento')}</strong>
+      </div>
+      <p>${escapeHtml(event.message || '')}</p>
+      ${rooms ? `<small>Setores no radar: ${escapeHtml(rooms)}</small>` : ''}
+    </div>
+  `;
+}
+
+function reliabilityLabel(reliability = 'medium') {
+  return {
+    high: 'Alta',
+    medium: 'Média',
+    low: 'Baixa'
+  }[reliability] || 'Média';
+}
+
+function renderEvidencePanel(state = getPublicState(gameState)) {
+  const items = (state.evidence || []).filter(item => item.round === state.round).slice(0, 6);
+  if (!items.length) return '';
+  return `
+    <div class="tn-evidence mb" aria-label="Evidências estruturadas da rodada">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Evidências e álibis</span>
+        <strong>${items.length} pista${items.length === 1 ? '' : 's'}</strong>
+      </div>
+      <div class="tn-evidence-list">
+        ${items.map(item => {
+    const room = state.rooms?.[item.roomId] || MISSION_ROOMS[item.roomId];
+    return `
+          <div class="tn-evidence-item tn-evidence-${escapeHtml(item.type)}">
+            <span class="tn-evidence-meta">${escapeHtml(evidenceTypeLabel(item.type))} · ${escapeHtml(reliabilityLabel(item.reliability))}</span>
+            <strong>${escapeHtml(room?.name || 'Setor')}</strong>
+            <small>${escapeHtml(item.message)}</small>
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCpuProfilesPanel(state = getPublicState(gameState)) {
+  const cpus = (state.players || []).filter(player => player.isCpu && player.cpuProfile);
+  if (!cpus.length) return '';
+  return `
+    <div class="tn-cpu-profiles mb" aria-label="Perfis sociais dos CPUs">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Perfis dos CPUs</span>
+        <strong>${cpus.length} personagem${cpus.length === 1 ? '' : 's'}</strong>
+      </div>
+      <div class="tn-cpu-profile-list">
+        ${cpus.map(cpu => {
+    const profile = CPU_PROFILES[cpu.cpuProfile.id] || cpu.cpuProfile;
+    return `
+          <div class="tn-cpu-profile-card ${cpu.expelled ? 'tn-cpu-profile-expelled' : ''}">
+            <strong>${escapeHtml(cpu.name)} · ${escapeHtml(cpu.cpuProfile.name)}</strong>
+            <small>${escapeHtml(cpu.cpuProfile.shortDescription)}</small>
+            ${profile.voteStyle ? `<span>${escapeHtml(profile.voteStyle)}</span>` : ''}
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCpuStatementsPanel(state = getPublicState(gameState)) {
+  const items = (state.cpuStatements || []).filter(item => item.round === state.round).slice(0, 6);
+  if (!items.length) return '';
+  return `
+    <div class="tn-statements mb" aria-label="Depoimentos dos CPUs">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Depoimentos dos CPUs</span>
+        <strong>${items.length} relato${items.length === 1 ? '' : 's'}</strong>
+      </div>
+      <div class="tn-statement-list">
+        ${items.map(item => `
+          <div class="tn-statement-item ${item.conflict ? 'tn-statement-conflict' : ''}">
+            <div class="tn-statement-title">
+              <strong>${escapeHtml((state.players || []).find(player => player.id === item.playerId)?.name || 'CPU')}</strong>
+              <span>${escapeHtml(item.profileName || 'CPU')}</span>
+            </div>
+            <ul class="tn-statement-answers">
+              <li><b>Onde</b><span>${escapeHtml(item.answers?.where || 'Sem resposta.')}</span></li>
+              <li><b>Fez</b><span>${escapeHtml(item.answers?.what || item.claimedAction || 'Sem resposta.')}</span></li>
+              <li><b>Suspeita</b><span>${escapeHtml(item.answers?.suspect || 'Sem suspeita declarada.')}</span></li>
+              <li><b>Memória</b><span>${escapeHtml(item.answers?.memory || 'Sem vínculo anterior relevante.')}</span></li>
+            </ul>
+            <small>${item.conflict ? escapeHtml(item.conflictReason || 'Relato em conflito com registros públicos.') : 'Relato compatível com os registros conhecidos.'}</small>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCpuQuestionPanel(state = getPublicState(gameState)) {
+  const items = (state.cpuQuestions || []).filter(item => item.round === state.round).slice(0, 4);
+  if (!items.length) return '';
+  return `
+    <div class="tn-cpu-dialogue mb" aria-label="Perguntas feitas aos CPUs">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Interrogatório</span>
+        <strong>${items.length} resposta${items.length === 1 ? '' : 's'}</strong>
+      </div>
+      <div class="tn-cpu-dialogue-list">
+        ${items.map(item => {
+    const cpu = (state.players || []).find(player => player.id === item.playerId);
+    return `
+          <div class="tn-cpu-dialogue-card">
+            <strong>${escapeHtml(cpu?.name || 'CPU')}</strong>
+            <small>${escapeHtml(item.question || 'Pergunta direta.')}</small>
+            <span>${escapeHtml(item.answer || 'Sem resposta pública.')}</span>
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCpuAccusationPanel(state = getPublicState(gameState)) {
+  const items = (state.cpuAccusationReactions || []).filter(item => item.round === state.round).slice(0, 4);
+  if (!items.length) return '';
+  return `
+    <div class="tn-cpu-dialogue mb" aria-label="Reações dos CPUs acusados">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Defesas dos CPUs</span>
+        <strong>${items.length} reação${items.length === 1 ? '' : 'ões'}</strong>
+      </div>
+      <div class="tn-cpu-dialogue-list">
+        ${items.map(item => {
+    const cpu = (state.players || []).find(player => player.id === item.playerId);
+    return `
+          <div class="tn-cpu-dialogue-card tn-cpu-dialogue-${escapeHtml(item.stance || 'pushes_back')}">
+            <strong>${escapeHtml(cpu?.name || 'CPU')}</strong>
+            <small>${item.stance === 'uses_alibi' ? 'Usou álibi público' : item.stance === 'defensive' ? 'Defendeu uma pista contra si' : 'Contestou a acusação'}</small>
+            <span>${escapeHtml(item.message || 'Sem defesa pública.')}</span>
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSoloCpuInterrogationControls(state = getPublicState(gameState)) {
+  if (!isSoloAssistMode()) return '';
+  const human = getSoloHumanPlayer(state);
+  if (!human) return '';
+  const questions = (state.cpuQuestions || []).filter(item => item.round === state.round && item.askedByPlayerId === human.id);
+  const accusations = (state.cpuAccusationReactions || []).filter(item => item.round === state.round && item.accuserId === human.id);
+  const cpus = (state.players || []).filter(player => player.isCpu && !player.expelled);
+  if (!cpus.length) return '';
+  return `
+    <div class="tn-cpu-interrogate mb" aria-label="Ações de investigação contra CPUs">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Pressionar CPUs</span>
+        <strong>Perguntas ${questions.length}/2 · acusações ${accusations.length}/2</strong>
+      </div>
+      <div class="tn-cpu-interrogate-list">
+        ${cpus.map(cpu => {
+    const asked = questions.some(item => item.playerId === cpu.id);
+    const accused = accusations.some(item => item.playerId === cpu.id);
+    return `
+          <div class="tn-cpu-interrogate-card">
+            <div>
+              <strong>${escapeHtml(cpu.name)}</strong>
+              <small>${escapeHtml(cpu.cpuProfile?.name || 'CPU')}</small>
+            </div>
+            <div class="tn-cpu-interrogate-actions">
+              <button class="btn btn-ghost" data-mission-action="ask-cpu" data-player-id="${cpu.id}" ${asked || questions.length >= 2 ? 'disabled' : ''}>Perguntar</button>
+              <button class="btn btn-ghost" data-mission-action="accuse-cpu" data-player-id="${cpu.id}" ${accused || accusations.length >= 2 ? 'disabled' : ''}>Acusar</button>
+            </div>
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCpuVoteExplanationsPanel(state = getPublicState(gameState)) {
+  const items = (state.cpuVoteExplanations || []).filter(item => item.round === state.round).slice(0, 6);
+  if (!items.length) return '';
+  return `
+    <div class="tn-cpu-votes mb" aria-label="Motivos dos votos dos CPUs">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Votos dos CPUs</span>
+        <strong>${items.length} justificativa${items.length === 1 ? '' : 's'}</strong>
+      </div>
+      <div class="tn-cpu-vote-list">
+        ${items.map(item => {
+    const voter = (state.players || []).find(player => player.id === item.voterId);
+    const target = item.skipped ? null : (state.players || []).find(player => player.id === item.targetId);
+    const confidence = { high: 'forte', medium: 'média', low: 'fraca' }[item.confidence] || 'média';
+    return `
+          <div class="tn-cpu-vote-card tn-cpu-vote-${escapeHtml(item.confidence || 'medium')}">
+            <div class="tn-statement-title">
+              <strong>${escapeHtml(voter?.name || 'CPU')}</strong>
+              <span>${escapeHtml(item.profileName || 'CPU')} · pista ${confidence}</span>
+            </div>
+            <small>${item.skipped ? 'Pulou o voto.' : `Votou em ${escapeHtml(target?.name || 'alguém')}.`} ${escapeHtml(item.reason || '')}</small>
+            ${item.clue ? `<small>${escapeHtml(item.clue)}</small>` : ''}
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCpuMemoryPanel(state = getPublicState(gameState)) {
+  const memoryByPlayer = state.cpuMemory?.byPlayerId || {};
+  const entries = (state.players || [])
+    .filter(player => player.isCpu && memoryByPlayer[player.id])
+    .map(player => ({ player, memory: memoryByPlayer[player.id] }))
+    .filter(({ memory }) => (
+      (memory.suspectedPlayerIds || []).length
+      || (memory.accusationsReceived || []).length
+      || (memory.alliances || []).length
+      || (memory.notes || []).length
+    ));
+  if (!entries.length) return '';
+  return `
+    <div class="tn-cpu-memory mb" aria-label="Memória social dos CPUs">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Memória dos CPUs</span>
+        <strong>Suspeitas e alianças</strong>
+      </div>
+      <div class="tn-cpu-memory-list">
+        ${entries.map(({ player, memory }) => {
+    const suspect = memory.suspectedPlayerIds?.[0];
+    const accusation = memory.accusationsReceived?.[0];
+    const ally = memory.alliances?.[0];
+    const note = memory.notes?.[0];
+    return `
+          <div class="tn-cpu-memory-card">
+            <strong>${escapeHtml(player.name)}</strong>
+            ${suspect ? `<small>Suspeita de ${escapeHtml((state.players || []).find(p => p.id === suspect.playerId)?.name || 'alguém')}: ${escapeHtml(suspect.reason)}</small>` : ''}
+            ${accusation ? `<small>Acusação recebida: ${escapeHtml(accusation.message)}</small>` : ''}
+            ${ally ? `<small>Aliança temporária com ${escapeHtml((state.players || []).find(p => p.id === ally.playerId)?.name || 'alguém')}: ${escapeHtml(ally.reason)}</small>` : ''}
+            ${note ? `<small>${escapeHtml(note.message)}</small>` : ''}
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function timelineStageLabel(stage = '') {
+  return {
+    movement: 'Movimento',
+    event: 'Evento',
+    log: 'Log',
+    statement: 'Depoimento'
+  }[stage] || 'Fato';
+}
+
+function timelineStageIcon(stage = '') {
+  return {
+    movement: '01',
+    event: '02',
+    log: '03',
+    statement: '04'
+  }[stage] || '•';
+}
+
+function renderRoundTimeline(state = getPublicState(gameState)) {
+  const items = (state.roundTimeline || []).filter(item => item.round === state.round).slice(0, 8);
+  if (!items.length) return '';
+  return `
+    <div class="tn-timeline mb" aria-label="Linha do tempo da rodada">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Linha do tempo</span>
+        <strong>Movimento → Evento → Log → Depoimentos</strong>
+      </div>
+      <div class="tn-timeline-list">
+        ${items.map(item => {
+    const room = item.roomId ? (state.rooms?.[item.roomId] || MISSION_ROOMS[item.roomId]) : null;
+    return `
+          <div class="tn-timeline-item tn-timeline-${escapeHtml(item.stage)}">
+            <span class="tn-timeline-pin">${timelineStageIcon(item.stage)}</span>
+            <span class="tn-timeline-copy">
+              <strong>${escapeHtml(timelineStageLabel(item.stage))}${room ? ` · ${escapeHtml(room.name || item.roomId)}` : ''}</strong>
+              <small>${escapeHtml(item.message)}</small>
+            </span>
+          </div>
+        `;
+  }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSuspicionHistory(state = getPublicState(gameState)) {
+  const histories = state.playerHistory?.byPlayerId || {};
+  const entries = (state.players || []).map(player => {
+    const history = histories[player.id] || {};
+    const suspicion = history.suspicion || { score: 0, level: 'low', reasons: [] };
+    const rooms = (history.rooms || []).slice(-3).map(item => {
+      const room = state.rooms?.[item.roomId] || MISSION_ROOMS[item.roomId];
+      return `R${item.round} ${room?.name || item.roomId}`;
+    });
+    const votesReceived = (history.votes || []).filter(item => item.type === 'received').length;
+    const votesCast = (history.votes || []).filter(item => item.type === 'cast').length;
+    const latestEvidence = (history.evidence || []).slice(-1)[0];
+    return {
+      player,
+      suspicion,
+      rooms,
+      votesReceived,
+      votesCast,
+      latestEvidence
+    };
+  }).sort((a, b) => (b.suspicion.score || 0) - (a.suspicion.score || 0) || a.player.name.localeCompare(b.player.name));
+  if (!entries.length) return '';
+  return `
+    <div class="tn-history mb" aria-label="Histórico de suspeita entre rodadas">
+      <div class="tn-panel-head">
+        <span class="tn-hud-label">Histórico de suspeita</span>
+        <strong>Fatos acumulados</strong>
+      </div>
+      <div class="tn-history-grid">
+        ${entries.map(({ player, suspicion, rooms, votesReceived, votesCast, latestEvidence }) => `
+          <div class="tn-history-card tn-history-${escapeHtml(suspicion.level || 'low')} ${player.expelled ? 'tn-history-expelled' : ''}">
+            <div class="tn-history-top">
+              <strong>${escapeHtml(player.name)}</strong>
+              <span>${Math.max(0, suspicion.score || 0)}</span>
+            </div>
+            <div class="tn-history-rooms">${rooms.length ? rooms.map(room => `<small>${escapeHtml(room)}</small>`).join('') : '<small>Sem sala registrada</small>'}</div>
+            <div class="tn-history-facts">
+              <small>${votesReceived} voto(s) recebido(s) · ${votesCast} voto(s) dado(s)</small>
+              <small>${escapeHtml(suspicion.reasons?.[0]?.message || latestEvidence?.message || 'Sem fato público forte acumulado.')}</small>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
 }
 
 function statusLabel(status = 'normal') {
@@ -520,6 +1087,16 @@ function getActivePublicPlayers(state = getPublicState(gameState)) {
 
 function allPlayersSubmitted(collection = {}) {
   return getActivePublicPlayers().every(player => collection[player.id]);
+}
+
+function canSkipRoundVote(state = getPublicState(gameState)) {
+  return state.alertLevel !== 'red' && !state.settings?.forceVoting;
+}
+
+function voteSkipBlockMessage(state = getPublicState(gameState)) {
+  if (state.alertLevel === 'red') return 'Alerta vermelho: votação obrigatória.';
+  if (state.settings?.forceVoting) return 'Preset investigativo: a rodada precisa terminar com uma acusação ou voto privado.';
+  return '';
 }
 
 function sendPublicStateToDevices() {
@@ -648,14 +1225,35 @@ function renderRoomReveal() {
   const state = getPublicState(gameState);
   setPlayPhase(`Rodada ${state.round}/${state.maxRounds}`);
   saveGameSession('roomReveal');
+  if (isSoloAssistMode()) return renderSoloInvestigationBriefing(state);
   render(`
     ${publicStatus()}
+    ${renderMissionObjectives(state)}
+    ${renderCpuProfilesPanel(state)}
+    ${renderSuspicionMeter(state)}
     ${renderPlayerChips()}
     <div class="card mission-stage-card mission-stage-room-reveal">
       <div class="mission-stage-kicker">Setores revelados</div>
       <h2 class="card-title">Tripulação posicionada</h2>
       ${renderRoomMap({ selectable: false, showOccupancy: true })}
       <button class="btn btn-primary btn-lg btn-block" data-mission-action="start-actions">Escolher ações →</button>
+    </div>
+  `);
+}
+
+function renderSoloInvestigationBriefing(state = getPublicState(gameState)) {
+  render(`
+    ${publicStatus()}
+    ${renderMissionObjectives(state)}
+    ${renderCpuProfilesPanel(state)}
+    ${renderSuspicionMeter(state)}
+    ${renderPlayerChips()}
+    <div class="card mission-stage-card tn-solo-brief">
+      <div class="mission-stage-kicker">Turno solo assistido</div>
+      <h2 class="card-title">CPUs se posicionaram pela nave</h2>
+      <p class="text-sm mb">O deslocamento dos bots foi resolvido em segundo plano. Use o mapa público para escolher sua ação sem passar por telas privadas repetitivas.</p>
+      ${renderRoomMap({ selectable: false, showOccupancy: true })}
+      <button class="btn btn-primary btn-lg btn-block mt" data-mission-action="start-actions">Escolher minha ação →</button>
     </div>
   `);
 }
@@ -698,8 +1296,9 @@ function renderTargetStep() {
   const player = currentPlayer(actionIndex);
   const privateState = getPrivateState(gameState, player.id);
   const action = privateState.availableActions.find(item => item.id === pendingActionId);
+  if (action?.requiresRoomTarget) return renderRoomTargetStep();
   const targets = activePlayers()
-    .filter(target => target.id !== player.id)
+    .filter(target => target.id !== player.id && (!action?.targetCpuOnly || target.isCpu))
     .map(target => `<button class="btn btn-ghost btn-lg" data-mission-action="choose-action-target" data-target-id="${target.id}">${escapeHtml(target.name)}</button>`)
     .join('');
   render(`
@@ -707,6 +1306,27 @@ function renderTargetStep() {
       <div class="mission-stage-kicker">Alvo da ação</div>
       <div class="mission-private-warning mb">Apenas <strong>${escapeHtml(player.name)}</strong> escolhe o alvo.</div>
       <h2 class="card-title">${escapeHtml(action?.name || 'Escolha um alvo')}</h2>
+      <div class="mission-choice-grid">${targets}</div>
+      <button class="btn btn-ghost btn-lg btn-block mt" data-mission-action="hide-private">Ocultar tela</button>
+    </div>
+  `);
+}
+
+function renderRoomTargetStep() {
+  const player = currentPlayer(actionIndex);
+  const privateState = getPrivateState(gameState, player.id);
+  const action = privateState.availableActions.find(item => item.id === pendingActionId);
+  const targets = Object.values(MISSION_ROOMS)
+    .map(room => `<button class="btn btn-ghost btn-lg" data-mission-action="choose-action-target" data-target-id="${room.id}">
+      <span class="tn-action-name">${escapeHtml(room.name)}</span>
+      <span class="tn-action-hint">${escapeHtml(room.shortDescription || '')}</span>
+    </button>`)
+    .join('');
+  render(`
+    <div class="card mission-private-card mission-stage-card mission-stage-action">
+      <div class="mission-stage-kicker">Sala alvo</div>
+      <div class="mission-private-warning mb">Apenas <strong>${escapeHtml(player.name)}</strong> escolhe a sala observada.</div>
+      <h2 class="card-title">${escapeHtml(action?.name || 'Escolha uma sala')}</h2>
       <div class="mission-choice-grid">${targets}</div>
       <button class="btn btn-ghost btn-lg btn-block mt" data-mission-action="hide-private">Ocultar tela</button>
     </div>
@@ -722,11 +1342,24 @@ function renderLogs() {
       <span>${escapeHtml(log.message)}</span>
     </div>
   `).join('');
-  const canSkipVote = state.alertLevel !== 'red';
+  const canSkipVote = canSkipRoundVote(state);
   setPlayPhase(`Rodada ${state.round}/${state.maxRounds}`);
   saveGameSession('logs');
   render(`
     ${publicStatus()}
+    ${renderMissionObjectives(state)}
+    ${renderRoundEventPanel(state)}
+    ${renderRoundBriefing(state)}
+    ${renderRoundTimeline(state)}
+    ${renderEvidencePanel(state)}
+    ${renderCpuProfilesPanel(state)}
+    ${renderCpuStatementsPanel(state)}
+    ${renderCpuQuestionPanel(state)}
+    ${renderCpuAccusationPanel(state)}
+    ${renderCpuVoteExplanationsPanel(state)}
+    ${renderCpuMemoryPanel(state)}
+    ${renderSuspicionMeter(state)}
+    ${renderSuspicionHistory(state)}
     ${renderPlayerChips()}
     <div class="card mission-stage-card mission-stage-logs">
       <div class="mission-stage-kicker">Pistas da rodada ${state.round}</div>
@@ -734,14 +1367,14 @@ function renderLogs() {
       <p class="text-sm mb">Analise os registros juntos para identificar padrões suspeitos.</p>
       <div class="mission-log-list mb">${logs || '<div class="mission-log-item">Nenhum log claro apareceu nesta rodada.</div>'}</div>
       <button class="btn btn-primary btn-lg btn-block" data-mission-action="start-discussion">💬 Iniciar discussão</button>
-      ${canSkipVote ? '<button class="btn btn-ghost btn-lg btn-block mt-sm" data-mission-action="skip-voting">Pular para próxima rodada</button>' : '<div class="helper-box mt">⚠️ Alerta vermelho: votação obrigatória.</div>'}
+      ${canSkipVote ? `<button class="btn btn-ghost btn-lg btn-block mt-sm" data-mission-action="skip-voting">Adiar acusação (-${state.settings?.deferVoteIntegrityCost || 8}% nave)</button>` : `<div class="helper-box mt">⚠️ ${escapeHtml(voteSkipBlockMessage(state))}</div>`}
     </div>
   `);
 }
 
 function renderDiscussion() {
   const state = getPublicState(gameState);
-  const canSkipVote = state.alertLevel !== 'red';
+  const canSkipVote = canSkipRoundVote(state);
   const alertMessages = {
     green: 'A nave está estável. Discutam com calma.',
     yellow: 'Atenção: integridade comprometida. O Android pode estar agindo.',
@@ -749,6 +1382,20 @@ function renderDiscussion() {
   };
   render(`
     ${publicStatus()}
+    ${renderMissionObjectives(state)}
+    ${renderRoundEventPanel(state)}
+    ${renderRoundBriefing(state)}
+    ${renderRoundTimeline(state)}
+    ${renderEvidencePanel(state)}
+    ${renderCpuProfilesPanel(state)}
+    ${renderCpuStatementsPanel(state)}
+    ${renderCpuQuestionPanel(state)}
+    ${renderCpuAccusationPanel(state)}
+    ${renderCpuVoteExplanationsPanel(state)}
+    ${renderCpuMemoryPanel(state)}
+    ${renderSuspicionMeter(state)}
+    ${renderSuspicionHistory(state)}
+    ${renderSoloCpuInterrogationControls(state)}
     ${renderPlayerChips()}
     <div class="card mission-stage-card mission-stage-discussion center">
       <div class="mission-stage-icon">💬</div>
@@ -757,7 +1404,7 @@ function renderDiscussion() {
       <p class="text-sm mb">${alertMessages[state.alertLevel] || 'Conversem sobre salas, logs e suspeitas.'}</p>
       <p class="text-sm mb tn-discussion-hint">Não revelem telas privadas. Use os logs públicos para raciocinar em grupo.</p>
       <button class="btn btn-primary btn-lg btn-block" data-mission-action="start-voting">🗳️ Votar agora</button>
-      ${canSkipVote ? '<button class="btn btn-ghost btn-lg btn-block mt-sm" data-mission-action="skip-voting">Encerrar sem votação</button>' : ''}
+      ${canSkipVote ? `<button class="btn btn-ghost btn-lg btn-block mt-sm" data-mission-action="skip-voting">Adiar acusação (-${state.settings?.deferVoteIntegrityCost || 8}% nave)</button>` : `<div class="helper-box mt-sm">⚠️ ${escapeHtml(voteSkipBlockMessage(state))}</div>`}
     </div>
   `);
 }
@@ -800,9 +1447,9 @@ function beginVoting() {
 }
 
 function skipVoting() {
+  if (!canSkipRoundVote()) return beginVoting();
   clearInterval(discussionTimer);
-  gameState = startVoting(gameState);
-  gameState = resolveVoting(gameState);
+  gameState = deferVoting(gameState);
   renderVoteReveal();
 }
 
@@ -845,11 +1492,24 @@ function renderVoteReveal() {
   }).join('');
   render(`
     ${publicStatus()}
+    ${renderMissionObjectives(state)}
+    ${renderRoundEventPanel(state)}
+    ${renderRoundBriefing(state)}
+    ${renderRoundTimeline(state)}
+    ${renderEvidencePanel(state)}
+    ${renderCpuProfilesPanel(state)}
+    ${renderCpuStatementsPanel(state)}
+    ${renderCpuQuestionPanel(state)}
+    ${renderCpuAccusationPanel(state)}
+    ${renderCpuVoteExplanationsPanel(state)}
+    ${renderCpuMemoryPanel(state)}
+    ${renderSuspicionMeter(state)}
+    ${renderSuspicionHistory(state)}
     ${renderPlayerChips()}
     <div class="card mission-stage-card mission-stage-ejection center">
       <div class="mission-stage-icon">${expelledName ? '🚪' : '⚖️'}</div>
       <h2 class="card-title">Resultado da votação</h2>
-      <p class="text-sm mb">${result.tied ? 'Empate. Ninguém foi expulso.' : expelledName ? `${escapeHtml(expelledName)} foi expulso da missão.` : 'Ninguém foi expulso.'}</p>
+      <p class="text-sm mb">${result.deferred ? `A acusação foi adiada e a nave perdeu ${result.integrityCost || state.settings?.deferVoteIntegrityCost || 8}% de integridade.` : result.tied ? 'Empate. Ninguém foi expulso.' : expelledName ? `${escapeHtml(expelledName)} foi expulso da missão.` : 'Ninguém foi expulso.'}</p>
       <div class="mission-log-list mb">${voteLines || '<div class="mission-log-item">Nenhum voto contra jogadores.</div>'}<div class="mission-log-item mission-log-vote"><strong>Pulados</strong><span>${result.skipped || 0} voto(s)</span></div></div>
       <button class="btn btn-primary btn-lg btn-block" data-mission-action="next-round">Próxima rodada →</button>
     </div>
@@ -948,10 +1608,14 @@ function renderDeviceActionSelection() {
 function renderDeviceTargetSelection() {
   const privateState = devicePrivateState;
   const action = privateState?.availableActions.find(item => item.id === pendingDeviceActionId);
-  const targets = getActivePublicPlayers(devicePublicState)
-    .filter(player => player.id !== privateState?.player.id)
-    .map(player => `<button class="btn btn-ghost btn-lg" data-mission-device-action="select-action-target" data-target-id="${player.id}">${escapeHtml(player.name)}</button>`)
-    .join('');
+  const targets = action?.requiresRoomTarget
+    ? Object.values(MISSION_ROOMS)
+      .map(room => `<button class="btn btn-ghost btn-lg" data-mission-device-action="select-action-target" data-target-id="${room.id}">${escapeHtml(room.name)}</button>`)
+      .join('')
+    : getActivePublicPlayers(devicePublicState)
+      .filter(player => player.id !== privateState?.player.id && (!action?.targetCpuOnly || player.isCpu))
+      .map(player => `<button class="btn btn-ghost btn-lg" data-mission-device-action="select-action-target" data-target-id="${player.id}">${escapeHtml(player.name)}</button>`)
+      .join('');
   renderDevice(`
     <div class="card mission-device-private">
       <div class="mission-private-warning mb">Escolha privada.</div>
@@ -995,6 +1659,12 @@ function renderDevicePublicUpdate() {
     <div class="card mission-stage-card mission-stage-device-public">
       <h2 class="card-title">Aguardando o host</h2>
       <p class="text-sm mb">Fase atual: ${escapeHtml(state.phase)} · Rodada ${state.round}/${state.maxRounds}</p>
+      ${renderRoundTimeline(state)}
+      ${renderEvidencePanel(state)}
+      ${renderCpuProfilesPanel(state)}
+      ${renderCpuStatementsPanel(state)}
+      ${renderCpuMemoryPanel(state)}
+      ${renderSuspicionHistory(state)}
       <div class="mission-log-list">${logs || '<div class="mission-log-item">Nenhum log público novo.</div>'}</div>
     </div>
   `);
@@ -1104,7 +1774,10 @@ function startMultiDeviceGame(players, rounds) {
     playerCount: players.length,
     singleDevice: false,
     discussionSeconds: settings.discussionSeconds,
-    votingSeconds: settings.votingSeconds
+    votingSeconds: settings.votingSeconds,
+    taskProgressScale: settings.taskProgressScale,
+    minCrewWinRound: settings.minCrewWinRound,
+    deferVoteIntegrityCost: settings.deferVoteIntegrityCost
   });
   gameState = assignRoles(gameState);
   gameState = startRound(gameState);
@@ -1117,10 +1790,9 @@ function startMultiDeviceGame(players, rounds) {
 
 function startGame(event) {
   event.preventDefault();
-  const rounds = Number.parseInt($('trustnoone-rounds')?.value, 10) || 6;
-  const settings = getMissionSettings();
   const singleDevice = $('trustnoone-single-device')?.checked !== false;
   if (!singleDevice) {
+    const rounds = Number.parseInt($('trustnoone-rounds')?.value, 10) || 6;
     if (!isMultiHost()) {
       setMissionSessionStatus('Crie uma sessão multi-device antes de iniciar.');
       return;
@@ -1146,11 +1818,14 @@ function startGame(event) {
     id: `mission_${Date.now()}`,
     seed: `${Date.now()}:${players.map(player => player.name).join('|')}`,
     players,
-    maxRounds: rounds,
+    maxRounds: config.rounds,
     playerCount: players.length,
     singleDevice: true,
-    discussionSeconds: settings.discussionSeconds,
-    votingSeconds: settings.votingSeconds
+    discussionSeconds: config.discussionSeconds,
+    votingSeconds: config.votingSeconds,
+    presetId: config.presetId,
+    forceVoting: config.forceVoting,
+    taskProgressScale: config.taskProgressScale
   });
   gameState = assignRoles(gameState);
   roleIndex = 0;
@@ -1171,7 +1846,10 @@ function startQuickMission() {
     playerCount: players.length,
     singleDevice: true,
     discussionSeconds: config.discussionSeconds,
-    votingSeconds: config.votingSeconds
+    votingSeconds: config.votingSeconds,
+    presetId: config.presetId,
+    forceVoting: config.forceVoting,
+    taskProgressScale: config.taskProgressScale
   });
   gameState = assignRoles(gameState);
   roleIndex = 0;
@@ -1371,7 +2049,7 @@ function handleDeviceClick(event) {
   }
   if (action === 'select-action') {
     const chosen = devicePrivateState?.availableActions.find(item => item.id === button.dataset.actionId);
-    if (chosen?.requiresTarget) {
+    if (chosen?.requiresTarget || chosen?.requiresRoomTarget) {
       pendingDeviceActionId = chosen.id;
       renderDeviceTargetSelection();
       return true;
@@ -1418,6 +2096,7 @@ function handleMissionClick(event) {
   if (action === 'create-session') return createHostSession();
   if (action === 'join-session') return joinMissionSession();
   if (action === 'quick-mission') return startQuickMission();
+  if (action === 'apply-preset') return applyMissionPreset(actionButton.dataset.presetId);
   if (action === 'reset-mission-settings') return resetMissionSettings();
   if (action === 'leave-device-session') return leaveDeviceSession();
   if (action === 'reveal-private') return handlePrivateReveal();
@@ -1457,7 +2136,7 @@ function handleMissionClick(event) {
     const player = currentPlayer(actionIndex);
     const privateState = getPrivateState(gameState, player.id);
     const chosenAction = privateState.availableActions.find(item => item.id === actionButton.dataset.actionId);
-    if (chosenAction?.requiresTarget) {
+    if (chosenAction?.requiresTarget || chosenAction?.requiresRoomTarget) {
       pendingActionId = chosenAction.id;
       return renderTargetStep();
     }
@@ -1485,6 +2164,16 @@ function handleMissionClick(event) {
     }
     return startDiscussionTimer();
   }
+  if (action === 'ask-cpu') {
+    const human = getSoloHumanPlayer();
+    if (human) gameState = askCpuQuestion(gameState, human.id, actionButton.dataset.playerId);
+    return renderDiscussion();
+  }
+  if (action === 'accuse-cpu') {
+    const human = getSoloHumanPlayer();
+    if (human) gameState = accuseCpu(gameState, human.id, actionButton.dataset.playerId);
+    return renderDiscussion();
+  }
   if (action === 'start-voting') return beginVoting();
   if (action === 'skip-voting') return skipVoting();
   if (action === 'submit-vote') {
@@ -1505,15 +2194,24 @@ function initMissionUi() {
   injectContinueButton();
   renderHomeLastResult();
   $('trustnoone-player-count')?.addEventListener('input', () => {
+    clearActiveMissionPreset();
     updateRangeLabels();
     renderSetupPlayers();
   });
   $('trustnoone-cpu-count')?.addEventListener('input', () => {
+    clearActiveMissionPreset();
     updateRangeLabels();
     renderSetupPlayers();
   });
-  $('trustnoone-rounds')?.addEventListener('input', updateRangeLabels);
-  $('trustnoone-single-device')?.addEventListener('change', updateSetupMode);
+  $('trustnoone-rounds')?.addEventListener('input', () => {
+    clearActiveMissionPreset();
+    updateRangeLabels();
+  });
+  $('trustnoone-cpu-difficulty')?.addEventListener('change', clearActiveMissionPreset);
+  $('trustnoone-single-device')?.addEventListener('change', () => {
+    clearActiveMissionPreset();
+    updateSetupMode();
+  });
   $('trustnoone-setup-form')?.addEventListener('submit', startGame);
   $('trustnoone-settings-form')?.addEventListener('submit', saveMissionSettings);
   [

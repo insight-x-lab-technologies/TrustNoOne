@@ -18,6 +18,18 @@ export const MISSION_ACTIONS = {
       type: 'normal_task',
       logHint: 'consulta de registros'
     },
+    calibrate_system: {
+      id: 'calibrate_system',
+      name: 'Calibrar sistema',
+      type: 'normal_task',
+      logHint: 'minigame rápido: sucesso acelera a missão, falha gera ruído'
+    },
+    dual_repair: {
+      id: 'dual_repair',
+      name: 'Reparo em dupla',
+      type: 'normal_task',
+      logHint: 'exige 2 pessoas na sala e cria álibi forte'
+    },
     assist_player: {
       id: 'assist_player',
       name: 'Ajudar jogador',
@@ -62,6 +74,14 @@ export const MISSION_ACTIONS = {
       roleIds: ['it_specialist'],
       roomIds: ['communications', 'storage', 'bridge']
     },
+    audit_access: {
+      id: 'audit_access',
+      name: 'Auditar acesso',
+      type: 'special_action',
+      roleIds: ['it_specialist'],
+      roomIds: ['communications', 'storage', 'bridge'],
+      logHint: 'lista curta de possíveis autores de sabotagem'
+    },
     scan_player: {
       id: 'scan_player',
       name: 'Escanear jogador',
@@ -69,6 +89,15 @@ export const MISSION_ACTIONS = {
       roleIds: ['medic'],
       roomIds: ['medbay'],
       requiresTarget: true
+    },
+    match_samples: {
+      id: 'match_samples',
+      name: 'Parear amostras',
+      type: 'special_action',
+      roleIds: ['medic'],
+      roomIds: ['medbay'],
+      requiresTarget: true,
+      logHint: 'confirma alteração real ou condição fingida'
     },
     treat_player: {
       id: 'treat_player',
@@ -85,12 +114,28 @@ export const MISSION_ACTIONS = {
       roleIds: ['security'],
       roomIds: ['bridge', 'cafeteria', 'storage', 'communications']
     },
+    security_patrol: {
+      id: 'security_patrol',
+      name: 'Ronda de segurança',
+      type: 'special_action',
+      roleIds: ['security'],
+      roomIds: ['bridge', 'cafeteria', 'storage', 'communications'],
+      requiresRoomTarget: true,
+      logHint: 'observa uma sala na próxima rodada'
+    },
     protect_player: {
       id: 'protect_player',
       name: 'Proteger jogador',
       type: 'special_action',
       roleIds: ['security'],
       requiresTarget: true
+    },
+    emergency_transmission: {
+      id: 'emergency_transmission',
+      name: 'Transmissão de emergência',
+      type: 'special_action',
+      roomIds: ['communications'],
+      logHint: 'prepara escudo contra o próximo dano do Android'
     }
   },
   sabotageActions: {
@@ -121,6 +166,28 @@ export const MISSION_ACTIONS = {
       damage: 8,
       roomIds: ['communications', 'bridge'],
       trace: 'lacuna nos registros'
+    },
+    divert_energy: {
+      id: 'divert_energy',
+      name: 'Desviar energia',
+      type: 'sabotage',
+      cooldown: 1,
+      limit: 3,
+      damage: 6,
+      roomIds: ['reactor', 'engineering', 'communications'],
+      requiresRoomTarget: true,
+      trace: 'pico de energia em setor isca'
+    },
+    forge_statement: {
+      id: 'forge_statement',
+      name: 'Forjar depoimento',
+      type: 'sabotage',
+      cooldown: 2,
+      limit: 2,
+      damage: 4,
+      requiresTarget: true,
+      targetCpuOnly: true,
+      trace: 'relato inconsistente induzido'
     },
     lock_room: {
       id: 'lock_room',
